@@ -28,11 +28,23 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/ccsp/mta
+
+# Wait 30 seconds before starting (existing behavior)
 ExecStartPre=/bin/sh -c 'sleep 30'
+
+# Only start if PartnerID is "comcast"
+# - If PartnerID is "comcast", service starts and will be restarted on failure.
+# - If PartnerID is not "comcast", service does not start and will not restart (exit code 200).
+ExecStartPre=/bin/sh -c '[ "$(syscfg get PartnerID)" = "comcast" ] || exit 200'
+
 ExecStart=/bin/sh -c '/usr/bin/CcspMtaAgentSsp -subsys $Subsys'
 ExecStopPost=/bin/sh -c 'echo "`date`: Stopping/Restarting CcspMtaAgentSsp" >> ${PROCESS_RESTART_LOG}'
-Restart=always
 
+Restart=always
+# Restart the service if it crashes (for comcast devices).
+# Exit code 200 is excluded from restart to prevent restart loops
+# on Non comcast devices where the service is intentionally not started.
+RestartPreventExitStatus=200
 
 [Install]
 WantedBy=multi-user.target

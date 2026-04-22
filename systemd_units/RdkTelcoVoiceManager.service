@@ -1,6 +1,5 @@
 [Unit]
 Description=RdkTelcoVoiceManager service
-
 After=CcspCrSsp.service
 
 [Service]
@@ -9,10 +8,24 @@ Environment="Subsys=eRT."
 Environment="LOG4C_RCPATH=/etc"
 EnvironmentFile=/etc/device.properties
 WorkingDirectory=/usr/rdk/voicemanager
+
+# Check PartnerID before starting the process:
+# - If PartnerID is NOT "comcast" (e.g. Sky devices), the check passes
+#   and the service proceeds to start telcovoice_manager normally.
+# - If PartnerID IS "comcast", the check fails with exit code 200
+#   and the service does not start. Exit code 200 is used as a unique
+#   marker to distinguish this intentional skip from an actual process
+#   crash, so that Restart=always does not cause a restart loop.
+ExecStartPre=/bin/sh -c '[ "$(syscfg get PartnerID)" != "comcast" ] || exit 200'
+
 ExecStart=/usr/bin/telcovoice_manager -subsys eRT.
 ExecStop=/bin/sh -c 'echo "`date`: Stopping/Restarting TelcoVoiceManager" >> ${PROCESS_RESTART_LOG}'
-Restart=always
 
+# Restart the service if it crashes (for Sky/non-comcast devices).
+# Exit code 200 is excluded from restart to prevent restart loops
+# on comcast devices where the service is intentionally not started.
+Restart=always
+RestartPreventExitStatus=200
 
 [Install]
 WantedBy=multi-user.target
