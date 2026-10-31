@@ -262,6 +262,16 @@ typedef struct _DHCP_MGR_IPV6_MSG
    char aftr[BUFLEN_256];
 } DHCP_MGR_IPV6_MSG;
 
+/* Voice data from DHCPv6 options 17 and 39. Sent as "VoiceInfo" next to "LeaseInfo" so DHCP_MGR_IPV6_MSG keeps its size. */
+typedef struct _DHCP_MGR_VOICE_V6_MSG
+{
+   char cTftpServer[BUFLEN_128];   /* option 17 sub-option 32, first address */
+   char cTftpFileName[BUFLEN_128]; /* option 17 sub-option 33 */
+   char cSyslogServer[BUFLEN_128]; /* option 17 sub-option 34, first address */
+   char cProvServer[BUFLEN_128];   /* option 17 sub-option 2171, nested 3 */
+   char cClientFqdn[BUFLEN_128];   /* option 39 */
+} DHCP_MGR_VOICE_V6_MSG;
+
 typedef enum {
     DHCP_CLIENT_STARTED,
     DHCP_CLIENT_STOPPED,
